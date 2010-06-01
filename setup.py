@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from distutils.core import setup
 import memcache
 
 setup(name="python-memcached",
@@ -9,10 +9,9 @@ setup(name="python-memcached",
       long_description=open("README").read(),
       author="Evan Martin",
       author_email="martine@danga.com",
-      maintainer="Sean Reifschneider",
-      maintainer_email="jafo@tummy.com",
-      url="http://www.tummy.com/Community/software/python-memcached/",
-      download_url="ftp://ftp.tummy.com/pub/python-memcached/",
+      maintainer="Tim Perevezentsev",
+      maintainer_email="riffm2005@gmail.com",
+      url="http://github.com/riffm/python-memcached",
       py_modules=["memcache"],
       classifiers=[
         "Development Status :: 5 - Production/Stable",

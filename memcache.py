@@ -78,7 +78,7 @@ except ImportError:
 
 
 __author__    = "Evan Martin <martine@danga.com>"
-__version__ = "1.45"
+__version__ = "1.45-patched"
 __copyright__ = "Copyright (C) 2003 Danga Interactive"
 __license__   = "Python"
 
