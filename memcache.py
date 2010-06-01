@@ -317,8 +317,8 @@ class Client(local):
         @param key_prefix:  Optional string to prepend to each key when sending to memcache.
             See docs for L{get_multi} and L{set_multi}.
 
-        @return: 1 if no failure in communication with any memcacheds.
-        @rtype: int
+        @return: True if no failure in communication with any memcacheds.
+        @rtype: bool
 
         '''
 
@@ -329,7 +329,7 @@ class Client(local):
         # send out all requests on each server before reading anything
         dead_servers = []
 
-        rc = 1
+        rc = True
         for server in server_keys.iterkeys():
             bigcmd = []
             write = bigcmd.append
@@ -342,7 +342,7 @@ class Client(local):
             try:
                 server.send_cmds(''.join(bigcmd))
             except socket.error, msg:
-                rc = 0
+                rc = False
                 if isinstance(msg, tuple): msg = msg[1]
                 server.mark_dead(msg)
                 dead_servers.append(server)
@@ -359,21 +359,21 @@ class Client(local):
             except socket.error, msg:
                 if isinstance(msg, tuple): msg = msg[1]
                 server.mark_dead(msg)
-                rc = 0
+                rc = False
         return rc
 
     def delete(self, key, time=0):
         '''Deletes a key from the memcache.
 
-        @return: Nonzero on success.
+        @return: True on success.
         @param time: number of seconds any subsequent set / update commands
         should fail. Defaults to 0 for no delay.
-        @rtype: int
+        @rtype: bool
         '''
         self.check_key(key)
         server, key = self._get_server(key)
         if not server:
-            return 0
+            return False
         self._statlog('delete')
         if time != None:
             cmd = "delete %s %d" % (key, time)
@@ -386,8 +386,8 @@ class Client(local):
         except socket.error, msg:
             if isinstance(msg, tuple): msg = msg[1]
             server.mark_dead(msg)
-            return 0
-        return 1
+            return False
+        return True
 
     def incr(self, key, delta=1):
         """
@@ -498,8 +498,8 @@ class Client(local):
         on the same memcache server, so you could use the user's unique
         id as the hash value.
 
-        @return: Nonzero on success.
-        @rtype: int
+        @return: True on success.
+        @rtype: bool
         @param time: Tells memcached the time which this value should expire, either
         as a delta number of seconds, or an absolute unix time-since-the-epoch
         value. See the memcached protocol docs section "Storage Commands"
@@ -590,7 +590,7 @@ class Client(local):
 
         >>> notset_keys = mc.set_multi({'key1' : 'val1', 'key2' : 'val2'})
         >>> mc.get_multi(['key1', 'key2']) == {'key1' : 'val1', 'key2' : 'val2'}
-        1
+        True
 
 
         This method is recommended over regular L{set} as it lowers the number of
@@ -718,12 +718,12 @@ class Client(local):
         self.check_key(key)
         server, key = self._get_server(key)
         if not server:
-            return 0
+            return False
 
         self._statlog(cmd)
 
         store_info = self._val_to_store_info(val, min_compress_len)
-        if not store_info: return(0)
+        if not store_info: return(False)
 
         if cmd == 'cas':
             if key not in self.cas_ids:
@@ -741,7 +741,7 @@ class Client(local):
         except socket.error, msg:
             if isinstance(msg, tuple): msg = msg[1]
             server.mark_dead(msg)
-        return 0
+        return False
 
     def _get(self, cmd, key):
         self.check_key(key)
@@ -792,22 +792,22 @@ class Client(local):
         >>> success = mc.set("foo", "bar")
         >>> success = mc.set("baz", 42)
         >>> mc.get_multi(["foo", "baz", "foobar"]) == {"foo": "bar", "baz": 42}
-        1
+        True
         >>> mc.set_multi({'k1' : 1, 'k2' : 2}, key_prefix='pfx_') == []
-        1
+        True
 
         This looks up keys 'pfx_k1', 'pfx_k2', ... . Returned dict will just have unprefixed keys 'k1', 'k2'.
         >>> mc.get_multi(['k1', 'k2', 'nonexist'], key_prefix='pfx_') == {'k1' : 1, 'k2' : 2}
-        1
+        True
 
         get_mult [ and L{set_multi} ] can take str()-ables like ints / longs as keys too. Such as your db pri key fields.
         They're rotored through str() before being passed off to memcache, with or without the use of a key_prefix.
         In this mode, the key_prefix could be a table name, and the key itself a db primary key number.
 
         >>> mc.set_multi({42: 'douglass adams', 46 : 'and 2 just ahead of me'}, key_prefix='numkeys_') == []
-        1
+        True
         >>> mc.get_multi([46, 42], key_prefix='numkeys_') == {42: 'douglass adams', 46 : 'and 2 just ahead of me'}
-        1
+        True
 
         This method is recommended over regular L{get} as it lowers the number of
         total packets flying around your network, reducing total latency, since
@@ -1043,7 +1043,7 @@ class _Host(object):
                 self.mark_dead('Connection closed while reading from %s'
                         % repr(self))
                 self.buffer = ''
-                return None
+                return ''
             buf += data
         self.buffer = buf[index+2:]
         return buf[:index]
