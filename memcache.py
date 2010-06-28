@@ -743,6 +743,37 @@ class Client(local):
             server.mark_dead(msg)
         return False
 
+    def tag_add(self, tag, key):
+        self.check_key(tag)
+        self.check_key(key)
+        server, tag = self._get_server(tag)
+        if not server:
+            return False
+        self._statlog('tag_add')
+
+        try:
+            server.send_cmd("tag_add %s %s" % (tag, key))
+            return(server.expect("TAG_STORED") == "TAG_STORED")
+        except (_Error, socket.error), msg:
+            if isinstance(msg, tuple): msg = msg[1]
+            server.mark_dead(msg)
+            return False
+
+    def tag_delete(self, tag):
+        self.check_key(tag)
+        server, tag = self._get_server(tag)
+        if not server:
+            return False
+        self._statlog('tag_delete')
+
+        try:
+            server.send_cmd("tag_delete %s" % (tag,))
+            return(server.expect("TAG_DELETED") == "TAG_DELETED")
+        except (_Error, socket.error), msg:
+            if isinstance(msg, tuple): msg = msg[1]
+            server.mark_dead(msg)
+            return False
+
     def _get(self, cmd, key):
         self.check_key(key)
         server, key = self._get_server(key)
